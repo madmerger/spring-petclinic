@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic
+  namespace: petclinic
+  labels:
+    app: petclinic
+    app.kubernetes.io/name: petclinic
+    app.kubernetes.io/part-of: spring-petclinic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: petclinic
+  template:
+    metadata:
+      labels:
+        app: petclinic
+        app.kubernetes.io/name: petclinic
+    spec:
+      containers:
+        - name: petclinic
+          # ECR から取得するイメージ。CI/CD で置換することを想定したプレースホルダー。
+          image: <ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/spring-petclinic:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: aws
+            # RDS 接続情報は ExternalSecret もしくは下記の petclinic-db Secret から注入する想定。
+            - name: RDS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-db
+                  key: RDS_URL
+            - name: RDS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-db
+                  key: RDS_USERNAME
+            - name: RDS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-db
+                  key: RDS_PASSWORD
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
