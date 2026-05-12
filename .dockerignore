@@ -1,0 +1,39 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Build output
+target
+build
+out
+
+# IDE
+.idea
+*.iml
+*.iws
+*.ipr
+.vscode
+.classpath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Docs and CI artifacts (not needed in the image)
+README.md
+HELP.md
+LICENSE.txt
+.github
+.devcontainer
+.gitpod.yml
+docker-compose.yml
+k8s
+.aws
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

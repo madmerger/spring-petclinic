@@ -1,0 +1,95 @@
+# AWS デプロイ用ワークフロー
+#
+# このワークフローは main ブランチへの push をトリガーに、Docker イメージを
+# Amazon ECR に push したうえで、Amazon ECS Fargate のサービスを更新する。
+#
+# 必要な GitHub Secrets:
+#   - AWS_ACCESS_KEY_ID      : デプロイ用 IAM ユーザーのアクセスキー ID
+#   - AWS_SECRET_ACCESS_KEY  : デプロイ用 IAM ユーザーのシークレットアクセスキー
+#   - AWS_REGION             : デプロイ先 AWS リージョン (例: ap-northeast-1)
+#   - ECR_REPOSITORY         : ECR リポジトリ名 (例: spring-petclinic)
+#   - ECS_CLUSTER            : ECS クラスター名
+#   - ECS_SERVICE            : ECS サービス名
+#   - ECS_TASK_DEFINITION    : ECS タスク定義ファミリー名 (.aws/task-definition.json の family と一致させる)
+
+name: AWS Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build and push image to Amazon ECR
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build, tag and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_SHA_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI_SHA="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_SHA_TAG"
+          IMAGE_URI_LATEST="$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          docker build \
+            -f Dockerfile \
+            -t "$IMAGE_URI_SHA" \
+            -t "$IMAGE_URI_LATEST" \
+            .
+          docker push "$IMAGE_URI_SHA"
+          docker push "$IMAGE_URI_LATEST"
+          echo "image=$IMAGE_URI_SHA" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy to Amazon ECS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Render Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/task-definition.json
+          container-name: spring-petclinic
+          image: ${{ needs.build-and-push.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
