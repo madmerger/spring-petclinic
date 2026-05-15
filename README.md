@@ -162,6 +162,39 @@ Here is a list of them:
 | Bean Validation / Hibernate Validator: simplify Maven dependencies and backward compatibility |[HV-790](https://hibernate.atlassian.net/browse/HV-790) and [HV-792](https://hibernate.atlassian.net/browse/HV-792) |
 | Spring Data: provide more flexibility when working with JPQL queries | [DATAJPA-292](https://github.com/spring-projects/spring-data-jpa/issues/704) |
 
+## AWS Deployment
+
+### Building the Docker Image
+
+A production-ready `Dockerfile` is provided using a multi-stage build. To build the image:
+
+```bash
+docker build -t petclinic .
+```
+
+### Running with the AWS Profile
+
+The `aws` Spring profile is configured for production deployment on AWS (RDS PostgreSQL). Set the following environment variables and activate the profile:
+
+```bash
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=aws \
+  -e RDS_JDBC_URL=jdbc:postgresql://<rds-endpoint>:5432/petclinic \
+  -e RDS_USERNAME=<db-username> \
+  -e RDS_PASSWORD=<db-password> \
+  petclinic
+```
+
+### Required Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RDS_JDBC_URL` | JDBC URL for the RDS PostgreSQL instance | `jdbc:postgresql://localhost:5432/petclinic` |
+| `RDS_USERNAME` | Database username | `petclinic` |
+| `RDS_PASSWORD` | Database password | `petclinic` |
+
+> **Note:** In ECS deployments, these environment variables are typically injected via AWS Secrets Manager in the task definition.
+
 ## Contributing
 
 The [issue tracker](https://github.com/spring-projects/spring-petclinic/issues) is the preferred channel for bug reports, feature requests and submitting pull requests.

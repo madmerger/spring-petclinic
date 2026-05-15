@@ -1,0 +1,12 @@
+.git
+target
+node_modules
+.idea
+.vscode
+.settings
+.classpath
+.project
+*.iml
+*.log
+.gradle
+build
