@@ -5,17 +5,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
-
-import java.util.Locale;
 
 /**
  * Configures internationalization (i18n) support for the application.
  *
  * <p>
  * Handles loading language-specific messages, tracking the user's language, and allowing
- * language changes via the URL parameter (e.g., <code>?lang=de</code>).
+ * language changes via the URL parameter (e.g., <code>?lang=de</code>). When no explicit
+ * choice is made, the browser's Accept-Language header is respected. Unsupported locales
+ * fall back to English through the message bundle resolution.
  * </p>
  *
  * @author Anuj Ashok Potdar
@@ -25,15 +25,14 @@ import java.util.Locale;
 public class WebConfiguration implements WebMvcConfigurer {
 
 	/**
-	 * Uses session storage to remember the user’s language setting across requests.
-	 * Defaults to English if nothing is specified.
-	 * @return session-based {@link LocaleResolver}
+	 * Uses a cookie to remember the user's explicit language choice across requests.
+	 * When no cookie is present, falls back to the browser's Accept-Language header.
+	 * Unsupported locales resolve to English through the base message bundle.
+	 * @return cookie-based {@link LocaleResolver}
 	 */
 	@Bean
 	public LocaleResolver localeResolver() {
-		SessionLocaleResolver resolver = new SessionLocaleResolver();
-		resolver.setDefaultLocale(Locale.ENGLISH);
-		return resolver;
+		return new CookieLocaleResolver("lang");
 	}
 
 	/**
