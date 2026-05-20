@@ -71,28 +71,40 @@
     <nav aria-label="Owner search results pagination">
       <ul class="pagination justify-content-center">
         <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-          <a class="page-link" th:href="@{'/owners?page=1'}" th:title="#{first}">
+          <a th:if="${currentPage > 1}" class="page-link" th:href="@{'/owners?page=1'}" th:title="#{first}">
             <span class="fa fa-fast-backward" aria-hidden="true"></span>
           </a>
+          <span th:unless="${currentPage > 1}" class="page-link" th:title="#{first}">
+            <span class="fa fa-fast-backward" aria-hidden="true"></span>
+          </span>
         </li>
         <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-          <a class="page-link" th:href="@{'/owners?page=__${currentPage - 1}__'}" th:title="#{previous}">
+          <a th:if="${currentPage > 1}" class="page-link" th:href="@{'/owners?page=__${currentPage - 1}__'}" th:title="#{previous}">
             <span class="fa fa-step-backward" aria-hidden="true"></span>
           </a>
+          <span th:unless="${currentPage > 1}" class="page-link" th:title="#{previous}">
+            <span class="fa fa-step-backward" aria-hidden="true"></span>
+          </span>
         </li>
         <li th:each="i: ${#numbers.sequence(1, totalPages)}" class="page-item"
           th:classappend="${currentPage == i} ? 'active'">
           <a class="page-link" th:href="@{'/owners?page=' + ${i}}" th:text="${i}">1</a>
         </li>
         <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-          <a class="page-link" th:href="@{'/owners?page=__${currentPage + 1}__'}" th:title="#{next}">
+          <a th:if="${currentPage < totalPages}" class="page-link" th:href="@{'/owners?page=__${currentPage + 1}__'}" th:title="#{next}">
             <span class="fa fa-step-forward" aria-hidden="true"></span>
           </a>
+          <span th:unless="${currentPage < totalPages}" class="page-link" th:title="#{next}">
+            <span class="fa fa-step-forward" aria-hidden="true"></span>
+          </span>
         </li>
         <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-          <a class="page-link" th:href="@{'/owners?page=__${totalPages}__'}" th:title="#{last}">
+          <a th:if="${currentPage < totalPages}" class="page-link" th:href="@{'/owners?page=__${totalPages}__'}" th:title="#{last}">
             <span class="fa fa-fast-forward" aria-hidden="true"></span>
           </a>
+          <span th:unless="${currentPage < totalPages}" class="page-link" th:title="#{last}">
+            <span class="fa fa-fast-forward" aria-hidden="true"></span>
+          </span>
         </li>
       </ul>
     </nav>
