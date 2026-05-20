@@ -25,8 +25,8 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 public class WebConfiguration implements WebMvcConfigurer {
 
 	/**
-	 * Uses a cookie to remember the user's explicit language choice across requests.
-	 * When no cookie is present, falls back to the browser's Accept-Language header.
+	 * Uses a cookie to remember the user's explicit language choice across requests. When
+	 * no cookie is present, falls back to the browser's Accept-Language header.
 	 * Unsupported locales resolve to English through the base message bundle.
 	 * @return cookie-based {@link LocaleResolver}
 	 */
