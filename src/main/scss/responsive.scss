@@ -38,4 +38,12 @@
     margin-bottom: 30px;
   }
 
+  .pet-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .search-input-group {
+    max-width: 100%;
+  }
+
 }

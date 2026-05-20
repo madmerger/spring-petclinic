@@ -143,7 +143,13 @@ class OwnerControllerTests {
 	void processFindFormSuccess() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
 		when(this.owners.findByLastNameStartingWith(anyString(), any(Pageable.class))).thenReturn(tasks);
-		mockMvc.perform(get("/owners?page=1")).andExpect(status().isOk()).andExpect(view().name("owners/ownersList"));
+		mockMvc.perform(get("/owners?page=1"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("totalItems"))
+			.andExpect(model().attributeExists("currentPage"))
+			.andExpect(model().attributeExists("totalPages"))
+			.andExpect(model().attribute("totalItems", 2L))
+			.andExpect(view().name("owners/ownersList"));
 	}
 
 	@Test
@@ -225,6 +231,23 @@ class OwnerControllerTests {
 			.andExpect(model().attribute("owner", hasProperty("pets", not(empty()))))
 			.andExpect(model().attribute("owner",
 					hasProperty("pets", hasItem(hasProperty("visits", hasSize(greaterThan(0)))))))
+			.andExpect(view().name("owners/ownerDetails"));
+	}
+
+	@Test
+	void showOwnerWithNoPets() throws Exception {
+		Owner ownerNoPets = new Owner();
+		ownerNoPets.setId(2);
+		ownerNoPets.setFirstName("Betty");
+		ownerNoPets.setLastName("Davis");
+		ownerNoPets.setAddress("638 Cardinal Ave.");
+		ownerNoPets.setCity("Sun Prairie");
+		ownerNoPets.setTelephone("6085551749");
+		given(this.owners.findById(2)).willReturn(Optional.of(ownerNoPets));
+
+		mockMvc.perform(get("/owners/{ownerId}", 2))
+			.andExpect(status().isOk())
+			.andExpect(model().attribute("owner", hasProperty("pets", empty())))
 			.andExpect(view().name("owners/ownerDetails"));
 	}
 
