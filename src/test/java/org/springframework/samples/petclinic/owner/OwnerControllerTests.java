@@ -229,6 +229,52 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	void findFormContainsSearchInput() throws Exception {
+		mockMvc.perform(get("/owners/find"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("search-owner-form")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("search-input")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("search-hero")));
+	}
+
+	@Test
+	void ownersListContainsTableAndCardViews() throws Exception {
+		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
+		when(this.owners.findByLastNameStartingWith(anyString(), any(Pageable.class))).thenReturn(tasks);
+		mockMvc.perform(get("/owners?page=1"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owners-table-wrapper")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owners-card-list")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owner-link")));
+	}
+
+	@Test
+	void ownerDetailsContainsPetCards() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("pet-cards-grid")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("pet-card")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owner-info-card")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("Max")));
+	}
+
+	@Test
+	void ownerDetailsContainsVisitHistory() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("pet-visits-section")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("pet-visit-item")));
+	}
+
+	@Test
+	void ownerDetailsContainsOwnerInfoGrid() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owner-info-grid")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("owner-actions")));
+	}
+
+	@Test
 	void processUpdateOwnerFormWithIdMismatch() throws Exception {
 		int pathOwnerId = 1;
 
