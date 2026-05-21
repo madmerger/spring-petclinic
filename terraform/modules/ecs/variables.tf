@@ -10,10 +10,6 @@ variable "aws_region" {
   type = string
 }
 
-variable "vpc_id" {
-  type = string
-}
-
 variable "private_subnet_ids" {
   type = list(string)
 }
@@ -22,12 +18,9 @@ variable "alb_target_group_arn" {
   type = string
 }
 
-variable "alb_security_group_id" {
-  type = string
-}
-
-variable "container_image" {
-  type = string
+variable "ecs_security_group_id" {
+  description = "Pre-created security group for ECS tasks (created in root module)"
+  type        = string
 }
 
 variable "container_port" {

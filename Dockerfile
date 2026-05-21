@@ -11,6 +11,7 @@ RUN ./mvnw package -DskipTests -B && \
 # ── Stage 2: Runtime ───────────────────────────────────────────
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 COPY --from=builder /app/target/app.jar app.jar
 USER appuser

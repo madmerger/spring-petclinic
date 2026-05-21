@@ -77,32 +77,6 @@ resource "aws_cloudwatch_log_group" "app" {
   tags = { Name = "${var.project_name}-${var.environment}-logs" }
 }
 
-# ── Security Group ────────────────────────────────────────────
-resource "aws_security_group" "ecs" {
-  name_prefix = "${var.project_name}-${var.environment}-ecs-"
-  description = "Security group for ECS tasks"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    description     = "Allow traffic from ALB"
-    from_port       = var.container_port
-    to_port         = var.container_port
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-ecs-sg" }
-
-  lifecycle { create_before_destroy = true }
-}
-
 # ── ECS Cluster & Service ────────────────────────────────────
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-${var.environment}"
@@ -174,7 +148,7 @@ resource "aws_ecs_service" "app" {
 
   network_configuration {
     subnets          = var.private_subnet_ids
-    security_groups  = [aws_security_group.ecs.id]
+    security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
 

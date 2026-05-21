@@ -49,6 +49,32 @@ module "alb" {
   container_port    = var.container_port
 }
 
+# ── ECS Security Group (standalone to break circular dependency) ─
+resource "aws_security_group" "ecs" {
+  name_prefix = "${var.project_name}-${var.environment}-ecs-"
+  description = "Security group for ECS tasks"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description     = "Allow traffic from ALB"
+    from_port       = var.container_port
+    to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [module.alb.alb_security_group_id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-${var.environment}-ecs-sg" }
+
+  lifecycle { create_before_destroy = true }
+}
+
 # ── RDS (PostgreSQL) ──────────────────────────────────────────
 module "rds" {
   source             = "./modules/rds"
@@ -56,7 +82,7 @@ module "rds" {
   environment        = var.environment
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
-  ecs_security_group_id = module.ecs.ecs_security_group_id
+  ecs_security_group_id = aws_security_group.ecs.id
   db_name            = var.db_name
   db_username        = var.db_username
   db_instance_class  = var.db_instance_class
@@ -68,11 +94,9 @@ module "ecs" {
   project_name        = var.project_name
   environment         = var.environment
   aws_region          = var.aws_region
-  vpc_id              = module.vpc.vpc_id
   private_subnet_ids  = module.vpc.private_subnet_ids
   alb_target_group_arn = module.alb.target_group_arn
-  alb_security_group_id = module.alb.alb_security_group_id
-  container_image     = var.container_image
+  ecs_security_group_id = aws_security_group.ecs.id
   container_port      = var.container_port
   cpu                 = var.ecs_cpu
   memory              = var.ecs_memory
