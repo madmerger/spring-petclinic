@@ -60,6 +60,22 @@
           </li>
 
         </ul>
+
+        <form class="d-flex align-items-center ms-lg-3" method="get">
+          <label class="visually-hidden" for="language-select" th:text="#{language}">Language</label>
+          <select id="language-select" class="form-select form-select-sm" name="lang" th:title="#{language}"
+            onchange="this.form.submit()">
+            <option value="en" th:selected="${#locale.language == 'en'}" th:text="#{language.en}">English</option>
+            <option value="de" th:selected="${#locale.language == 'de'}" th:text="#{language.de}">Deutsch</option>
+            <option value="es" th:selected="${#locale.language == 'es'}" th:text="#{language.es}">Español</option>
+            <option value="fa" th:selected="${#locale.language == 'fa'}" th:text="#{language.fa}">فارسی</option>
+            <option value="ko" th:selected="${#locale.language == 'ko'}" th:text="#{language.ko}">한국어</option>
+            <option value="pt" th:selected="${#locale.language == 'pt'}" th:text="#{language.pt}">Português</option>
+            <option value="ru" th:selected="${#locale.language == 'ru'}" th:text="#{language.ru}">Русский</option>
+            <option value="tr" th:selected="${#locale.language == 'tr'}" th:text="#{language.tr}">Türkçe</option>
+            <option value="ja" th:selected="${#locale.language == 'ja'}" th:text="#{language.ja}">日本語</option>
+          </select>
+        </form>
       </div>
     </div>
   </nav>
