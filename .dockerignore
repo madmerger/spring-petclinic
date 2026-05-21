@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+*.iml
+*.iws
+*.ipr
+target/
+build/
+terraform/
+k8s/
+*.md
+LICENSE.txt
+docker-compose.yml

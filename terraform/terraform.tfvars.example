@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and customize for your environment
+aws_region         = "ap-northeast-1"
+project_name       = "petclinic"
+environment        = "dev"
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["ap-northeast-1a", "ap-northeast-1c"]
+container_image    = "petclinic:latest"
+container_port     = 8080
+ecs_cpu            = 512
+ecs_memory         = 1024
+ecs_desired_count  = 2
+db_name            = "petclinic"
+db_username        = "petclinic"
+db_instance_class  = "db.t3.micro"
