@@ -27,3 +27,27 @@ jobs:
           cache: maven
       - name: Build with Maven Wrapper
         run: ./mvnw -B verify
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-jdk${{matrix.java}}
+          path: target/site/jacoco/
+      - name: JaCoCo coverage summary
+        if: always()
+        run: |
+          if [ -f target/site/jacoco/jacoco.csv ]; then
+            echo "## JaCoCo Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Class | Instruction Coverage |" >> $GITHUB_STEP_SUMMARY
+            echo "|-------|---------------------|" >> $GITHUB_STEP_SUMMARY
+            tail -n +2 target/site/jacoco/jacoco.csv | while IFS=',' read -r group pkg class mi ci mb cb ml cl cxm cxc mm cm; do
+              total=$((mi + ci))
+              if [ "$total" -gt 0 ]; then
+                pct=$((ci * 100 / total))
+              else
+                pct=0
+              fi
+              echo "| ${pkg}.${class} | ${pct}% (${ci}/${total}) |" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
