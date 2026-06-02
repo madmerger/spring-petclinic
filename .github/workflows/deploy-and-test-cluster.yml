@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'k8s/**'
+      - 'Dockerfile'
   pull_request:
     branches: [main]
     paths:
       - 'k8s/**'
+      - 'Dockerfile'
 
 jobs:
   deploy-and-test-cluster:
@@ -33,8 +35,10 @@ jobs:
           kubectl apply -f k8s/db.yml
           kubectl apply -f k8s/petclinic.yml
           kubectl apply -f k8s/pdb.yml
+          # Scale down to 1 replica for CI (Kind has limited resources)
+          kubectl scale deployment petclinic --replicas=1
 
       - name: Wait for Pods to be ready
         run: |
           kubectl wait --for=condition=ready pod -l app=demo-db --timeout=180s
-          kubectl wait --for=condition=ready pod -l app=petclinic --timeout=180s
+          kubectl wait --for=condition=ready pod -l app=petclinic --timeout=300s
