@@ -33,6 +33,7 @@ spec:
           # TODO: Replace with your own registry image, e.g.:
           #   ghcr.io/<owner>/spring-petclinic:<tag>
           image: ghcr.io/madmerger/spring-petclinic:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
