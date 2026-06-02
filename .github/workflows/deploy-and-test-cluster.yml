@@ -42,3 +42,13 @@ jobs:
         run: |
           kubectl wait --for=condition=ready pod -l app=demo-db --timeout=180s
           kubectl wait --for=condition=ready pod -l app=petclinic --timeout=300s
+
+      - name: Debug pod status on failure
+        if: failure()
+        run: |
+          echo "=== Pod status ==="
+          kubectl get pods -o wide
+          echo "=== Petclinic pod describe ==="
+          kubectl describe pod -l app=petclinic
+          echo "=== Petclinic pod logs ==="
+          kubectl logs -l app=petclinic --tail=100 || true
