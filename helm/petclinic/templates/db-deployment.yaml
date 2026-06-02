@@ -1,63 +1,45 @@
----
-# NOTE: For production deployments, do NOT store credentials in plain text.
-# Use an external secret management solution such as:
-#   - AWS Secrets Manager with External Secrets Operator
-#   - HashiCorp Vault with Vault Agent Injector
-#   - Azure Key Vault with CSI Driver
-#   - GCP Secret Manager
-# Replace the stringData values below with references to your secret store.
-apiVersion: v1
-kind: Secret
-metadata:
-  name: demo-db
-type: servicebinding.io/postgresql
-stringData:
-  type: "postgresql"
-  provider: "postgresql"
-  host: "demo-db"
-  port: "5432"
-  database: "petclinic"
-  username: "CHANGE_ME"
-  password: "CHANGE_ME"
-
----
 apiVersion: v1
 kind: Service
 metadata:
-  name: demo-db
+  name: {{ .Values.database.host }}
+  labels:
+    {{- include "petclinic.labels" . | nindent 4 }}
 spec:
   ports:
-    - port: 5432
+    - port: {{ .Values.database.port }}
   selector:
-    app: demo-db
+    app: {{ .Release.Name }}-db
 
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: demo-db-pvc
+  name: {{ .Release.Name }}-db-pvc
+  labels:
+    {{- include "petclinic.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: {{ .Values.database.storage }}
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-db
+  name: {{ .Release.Name }}-db
   labels:
-    app: demo-db
+    app: {{ .Release.Name }}-db
+    {{- include "petclinic.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      app: demo-db
+      app: {{ .Release.Name }}-db
   template:
     metadata:
       labels:
-        app: demo-db
+        app: {{ .Release.Name }}-db
     spec:
       containers:
         - image: postgres:18.3
@@ -66,22 +48,22 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: demo-db
+                  name: {{ .Release.Name }}-db
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: demo-db
+                  name: {{ .Release.Name }}-db
                   key: password
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: demo-db
+                  name: {{ .Release.Name }}-db
                   key: database
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           ports:
-            - containerPort: 5432
+            - containerPort: {{ .Values.database.port }}
               name: postgresql
           volumeMounts:
             - name: db-data
@@ -98,4 +80,4 @@ spec:
       volumes:
         - name: db-data
           persistentVolumeClaim:
-            claimName: demo-db-pvc
+            claimName: {{ .Release.Name }}-db-pvc

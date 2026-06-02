@@ -1,0 +1,23 @@
+# Staging environment overrides
+replicaCount: 2
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  hosts:
+    - host: petclinic-staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - petclinic-staging.example.com
+      secretName: petclinic-staging-tls
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 5
+
+database:
+  storage: 5Gi

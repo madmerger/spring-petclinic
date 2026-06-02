@@ -1,0 +1,50 @@
+# Build output
+target/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+.project
+.classpath
+.settings/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+
+# Kubernetes & Helm
+k8s/
+helm/
+
+# Documentation
+README.md
+LICENSE.txt
+HELP.md
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Gradle (using Maven for build)
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+build.gradle
+settings.gradle
+
+# Misc
+*.md
+_site/
+.editorconfig
+.gitpod.yml
+.devcontainer/

@@ -1,41 +1,28 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: petclinic
-spec:
-  type: NodePort
-  ports:
-    - port: 80
-      targetPort: 8080
-  selector:
-    app: petclinic
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: petclinic
+  name: {{ .Release.Name }}
   labels:
-    app: petclinic
+    {{- include "petclinic.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: petclinic
+      {{- include "petclinic.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: petclinic
+        {{- include "petclinic.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name: workload
-          # TODO: Replace with your own registry image, e.g.:
-          #   ghcr.io/<owner>/spring-petclinic:<tag>
-          image: ghcr.io/madmerger/spring-petclinic:latest
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: postgres
+              value: {{ .Values.spring.profiles }}
             - name: SERVICE_BINDING_ROOT
               value: /bindings
             - name: SPRING_APPLICATION_JSON
@@ -45,14 +32,9 @@ spec:
                 }
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.service.targetPort }}
           resources:
-            requests:
-              cpu: 250m
-              memory: 512Mi
-            limits:
-              cpu: "1"
-              memory: 1Gi
+            {{- toYaml .Values.resources | nindent 12 }}
           startupProbe:
             httpGet:
               path: /readyz
@@ -76,4 +58,4 @@ spec:
           projected:
             sources:
               - secret:
-                  name: demo-db
+                  name: {{ .Release.Name }}-db
