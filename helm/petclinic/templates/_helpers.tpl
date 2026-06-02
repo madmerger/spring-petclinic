@@ -11,7 +11,7 @@ App labels for the main petclinic deployment
 */}}
 {{- define "petclinic.labels" -}}
 app: {{ .Release.Name }}
-{{- include "petclinic.metaLabels" . }}
+{{ include "petclinic.metaLabels" . }}
 {{- end }}
 
 {{/*
@@ -26,7 +26,7 @@ App labels for the database deployment
 */}}
 {{- define "petclinic.dbLabels" -}}
 app: {{ .Release.Name }}-db
-{{- include "petclinic.metaLabels" . }}
+{{ include "petclinic.metaLabels" . }}
 {{- end }}
 
 {{/*
