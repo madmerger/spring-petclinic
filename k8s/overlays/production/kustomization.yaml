@@ -38,3 +38,13 @@ patches:
       kind: Service
       metadata:
         name: demo-db
+
+  - target:
+      kind: Secret
+      name: demo-db
+    patch: |
+      $patch: delete
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: demo-db

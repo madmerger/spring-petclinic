@@ -38,9 +38,11 @@ jobs:
         uses: imranismail/setup-kustomize@v2
 
       - name: Update image tag in Kustomize overlay
+        env:
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
         run: |
           cd k8s/overlays/production
-          kustomize edit set image dsyer/petclinic=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}
+          kustomize edit set image "dsyer/petclinic=${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
       - name: Build Kustomize manifests
         run: kustomize build k8s/overlays/production
@@ -56,8 +58,11 @@ jobs:
       #     kubectl rollout status deployment/petclinic --timeout=300s
 
       - name: Deployment summary
+        env:
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+          DEPLOY_ENV: ${{ github.event.inputs.environment }}
         run: |
           echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${DEPLOY_ENV}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}" >> $GITHUB_STEP_SUMMARY
           echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

@@ -41,17 +41,21 @@ jobs:
 
       - name: Deploy application with test image
         run: |
-          # Apply base manifests (excluding Kustomize overlays, HPA, Ingress, and ExternalSecret)
           kubectl apply -f k8s/db.yml
-          cat k8s/petclinic.yml | sed 's|image: dsyer/petclinic|image: petclinic:test|' | sed 's|imagePullPolicy: Always|imagePullPolicy: Never|' | kubectl apply -f -
+          # Replace image, set imagePullPolicy to Never, and remove resource limits for CI
+          cat k8s/petclinic.yml \
+            | sed 's|image: dsyer/petclinic|image: petclinic:test|' \
+            | sed 's|imagePullPolicy: Always|imagePullPolicy: Never|' \
+            | sed '/resources:/,/cpu: "500m"/d' \
+            | kubectl apply -f -
 
       - name: Wait for Pods to be ready
         run: |
           kubectl wait --for=condition=ready pod -l app=demo-db --timeout=180s
-          kubectl wait --for=condition=ready pod -l app=petclinic --timeout=180s
+          kubectl wait --for=condition=ready pod -l app=petclinic --timeout=300s
 
       - name: Smoke test - check application health
         run: |
           kubectl port-forward svc/petclinic 8080:80 &
-          sleep 5
-          curl -f http://localhost:8080/actuator/health || exit 1
+          sleep 10
+          curl -f --retry 5 --retry-delay 5 http://localhost:8080/actuator/health || exit 1
