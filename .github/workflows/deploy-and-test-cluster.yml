@@ -33,9 +33,11 @@ jobs:
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1
+        with:
+          cluster_name: kind
 
       - name: Load image into Kind cluster
-        run: kind load docker-image petclinic:test
+        run: kind load docker-image petclinic:test --name kind
 
       - name: Deploy application with test image
         run: |
