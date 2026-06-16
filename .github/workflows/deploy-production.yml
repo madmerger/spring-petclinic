@@ -1,0 +1,63 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Container image tag to deploy (Git SHA or "latest")'
+        required: true
+        default: 'latest'
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update image tag in Kustomize overlay
+        run: |
+          cd k8s/overlays/production
+          kustomize edit set image dsyer/petclinic=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}
+
+      - name: Build Kustomize manifests
+        run: kustomize build k8s/overlays/production
+
+      # Uncomment and configure kubeconfig for actual deployment
+      # - name: Configure kubeconfig
+      #   run: |
+      #     echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+
+      # - name: Apply manifests
+      #   run: |
+      #     kustomize build k8s/overlays/production | kubectl apply -f -
+      #     kubectl rollout status deployment/petclinic --timeout=300s
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

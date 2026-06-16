@@ -162,6 +162,91 @@ Here is a list of them:
 | Bean Validation / Hibernate Validator: simplify Maven dependencies and backward compatibility |[HV-790](https://hibernate.atlassian.net/browse/HV-790) and [HV-792](https://hibernate.atlassian.net/browse/HV-792) |
 | Spring Data: provide more flexibility when working with JPQL queries | [DATAJPA-292](https://github.com/spring-projects/spring-data-jpa/issues/704) |
 
+## Cloud Deployment
+
+This section describes how to deploy PetClinic to a cloud Kubernetes environment.
+
+### Profiles
+
+| Profile | Purpose |
+|---------|---------|
+| *(default)* | H2 in-memory DB, all actuator endpoints exposed |
+| `postgres` | PostgreSQL via env vars (`POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASS`) |
+| `mysql` | MySQL connection |
+| `prod` | Restricts actuator endpoints to `health` and `info` only |
+| `clouddb` | Managed DB with SSL (`sslmode=require`), connection pooling, no schema init |
+
+Combine profiles as needed, e.g. `SPRING_PROFILES_ACTIVE=postgres,prod` or `SPRING_PROFILES_ACTIVE=clouddb,prod`.
+
+### Building and Pushing the Container Image
+
+```bash
+# Build the OCI image using Spring Boot build plugin
+./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/<owner>/spring-petclinic:<tag>
+
+# Push to GitHub Container Registry
+docker push ghcr.io/<owner>/spring-petclinic:<tag>
+```
+
+The `build-and-push.yml` GitHub Actions workflow automates this on every push to `main`.
+
+### Deploying with Kustomize
+
+The `k8s/` directory is organized for Kustomize-based deployment:
+
+```
+k8s/
+├── base/
+│   └── kustomization.yaml    # References all base manifests
+├── overlays/
+│   └── production/
+│       └── kustomization.yaml # Production image overrides, replica patches
+├── petclinic.yml              # Deployment + Service
+├── db.yml                     # Dev PostgreSQL + Secret
+├── ingress.yml                # Ingress resource
+├── hpa.yml                    # HorizontalPodAutoscaler
+└── external-secret.yml        # ExternalSecret template for production
+```
+
+**Development (direct apply):**
+```bash
+kubectl apply -f k8s/db.yml -f k8s/petclinic.yml
+```
+
+**Production (Kustomize overlay):**
+```bash
+kustomize build k8s/overlays/production | kubectl apply -f -
+```
+
+The production overlay:
+- Replaces the image with `ghcr.io/madmerger/spring-petclinic:latest`
+- Sets minimum replicas to 2
+- Removes the in-cluster dev database (use a managed DB instead)
+
+### Managed Database Connection
+
+For cloud-managed databases (RDS, Cloud SQL, Azure Database for PostgreSQL):
+
+1. Use the `clouddb` profile: `SPRING_PROFILES_ACTIVE=clouddb,prod`
+2. Set environment variables: `POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASS`
+3. The `clouddb` profile enables SSL (`sslmode=require`) and disables schema init
+
+### Secret Management
+
+Development uses plaintext dummy credentials in `k8s/db.yml`. For production:
+
+1. Install the [External Secrets Operator](https://external-secrets.io/)
+2. Configure `k8s/external-secret.yml` with your cloud provider (AWS Secrets Manager, GCP Secret Manager, etc.)
+3. The ExternalSecret will create the `demo-db` Secret from your cloud secret store
+
+### Manual Production Deployment
+
+Use the `deploy-production.yml` workflow (manual trigger via `workflow_dispatch`):
+
+1. Go to **Actions** → **Deploy to Production**
+2. Select the image tag (Git SHA or `latest`) and target environment
+3. The workflow builds Kustomize manifests with the specified image
+
 ## Contributing
 
 The [issue tracker](https://github.com/spring-projects/spring-petclinic/issues) is the preferred channel for bug reports, feature requests and submitting pull requests.

@@ -1,3 +1,5 @@
+# [Development only] This Secret uses dummy credentials for local/dev use.
+# In production, replace with ExternalSecret (see k8s/external-secret.yml).
 ---
 apiVersion: v1
 kind: Secret
@@ -10,8 +12,8 @@ stringData:
   host: "demo-db"
   port: "5432"
   database: "petclinic"
-  username: "user"
-  password: "pass"
+  username: "user"       # dummy credential - do NOT use in production
+  password: "pass"       # dummy credential - do NOT use in production
 
 ---
 apiVersion: v1
