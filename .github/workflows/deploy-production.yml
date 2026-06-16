@@ -47,6 +47,11 @@ jobs:
       - name: Build Kustomize manifests
         run: kustomize build k8s/overlays/production
 
+      # PREREQUISITE: Ensure the ExternalSecret (k8s/external-secret.yml) and its
+      # SecretStore are already applied to the target cluster. The production overlay
+      # deletes the dummy demo-db Secret; the ExternalSecret must recreate it from
+      # your cloud secret manager before the petclinic pods can start.
+
       # Uncomment and configure kubeconfig for actual deployment
       # - name: Configure kubeconfig
       #   run: |
